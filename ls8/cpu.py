@@ -36,32 +36,27 @@ class CPU:
         PC_ADD = (OP_CODE >> 6) + 1
         self.PC += PC_ADD
 
-    def LOAD_FILE(self, FILE):
+    def load(self, FILE):
         """Load file into memory."""
         
-        # set ADDRESS counter
+        print("loading:", FILE)
         ADDRESS = 0
-
         try:
-            with open(FILE) as file:
-                for line in file:
-                    comment_split = line.split('#')
-                    number = comment_split[0].strip()  # trim whitespace
+            with open(FILE) as f:
+                for line in f:
+                    num = line.split("#", 1)[0]
 
-                    if number == "":
-                        continue  # ignore blank lines
+                    if num.strip() == '':
+                        continue
 
-                    VALUE = int(number, 2)
-                    # print('VALUE from file being read:', VALUE)
-                    # store it in memory
-                    self.RAM_WRITE(VALUE, ADDRESS)
-
+                    self.RAM[ADDRESS] = int(num, 2)
                     ADDRESS += 1
-
-        # if file not found, throw exception
         except FileNotFoundError:
-            print(f"{sys.argv[0]}: {FILE} not found")
+            print(f"ERROR: {FILE} not found")
             sys.exit(2)
+        except IsADirectoryError:
+            print(f"ERROR: {FILE} is a directory")
+            sys.exit(3)
 
     def ALU(self, OP, REG_A, REG_B):
         """ALU operations."""
@@ -107,7 +102,7 @@ class CPU:
 
         print()
 
-    def RUN(self):
+    def run(self):
         """Run the CPU."""
         self.CPU_RUNNING = True
         while self.CPU_RUNNING:
@@ -196,7 +191,7 @@ class CPU:
                 self.RAM[self.GEN_REG[self.SP]] = self.PC + 2
                 ADDRESS_of_subroutine = self.RAM[self.PC + 1]
                 self.PC = self.GEN_REG[ADDRESS_of_subroutine]
-                
+
             # RET instruction
             elif OP_CODE == 0b00010001:
                 self.PC = self.RAM[self.GEN_REG[self.SP]]
